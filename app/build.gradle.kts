@@ -1,9 +1,11 @@
+import com.android.build.api.dsl.Packaging
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
   id("kotlin-kapt")
-  id ("dagger.hilt.android.plugin")
+  id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -38,8 +40,22 @@ android {
   }
   buildFeatures {
     compose = true
+    mlModelBinding = true
   }
+  packaging {
+    resources {
+      excludes += setOf(
+        "META-INF/*.kotlin_module",
+        "META-INF/atomicfu.kotlin_module",
+        "META-INF/kotlinx-io.kotlin_module",
+        "META-INF/kotlinx-coroutines-core.kotlin_module"
+      )
+    }
+  }
+
 }
+
+
 
 dependencies {
 
@@ -62,9 +78,40 @@ dependencies {
   implementation(libs.androidx.media3.exoplayer)
   implementation(libs.androidx.media3.ui)
 
+
   //Hilt
   implementation(libs.hilt.android)
   kapt(libs.hilt.compiler)
   implementation(libs.androidx.hilt.navigation.compose)
+
+  //Ml kit
+  implementation(libs.object1.detection)
+  implementation(libs.kotlinx.coroutines.play.services)
+  implementation(libs.object1.detection.custom.v1700)
+  implementation(libs.pose.detection)
+  implementation("com.google.mlkit:face-detection:16.1.7")
+
+  implementation(libs.image.labeling)
+  implementation(libs.common)
+  implementation(libs.mediapipe.internal)
+  implementation(libs.tasks.vision)
+  //Ktor Dependencies for OpenAI
+  implementation("com.aallam.openai:openai-client:4.0.1")
+  implementation(platform("io.ktor:ktor-bom:3.0.0"))
+
+  implementation("io.ktor:ktor-client-core")
+  implementation("io.ktor:ktor-client-okhttp")
+  implementation("io.ktor:ktor-client-content-negotiation")
+  implementation("io.ktor:ktor-client-logging")
+  implementation("io.ktor:ktor-serialization-kotlinx-json")
+
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+
+  //Tensor flow
+  implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.3")
+  implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
+  implementation("org.tensorflow:tensorflow-lite-gpu-delegate-plugin:0.4.3")
+
 
 }
