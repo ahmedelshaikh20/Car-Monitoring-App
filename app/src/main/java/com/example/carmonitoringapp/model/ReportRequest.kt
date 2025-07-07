@@ -1,4 +1,4 @@
-package com.example.carmonitoringapp.data.model
+package com.example.carmonitoringapp.model
 
 import kotlinx.serialization.Serializable
 

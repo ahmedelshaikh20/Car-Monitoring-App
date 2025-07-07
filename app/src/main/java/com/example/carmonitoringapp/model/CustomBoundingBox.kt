@@ -1,4 +1,4 @@
-package com.example.carmonitoringapp.data.model
+package com.example.carmonitoringapp.model
 
 data class CustomBoundingBox(
   val x: Int,

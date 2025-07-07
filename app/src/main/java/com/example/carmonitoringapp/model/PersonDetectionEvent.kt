@@ -1,6 +1,4 @@
-package com.example.carmonitoringapp.data.model
-
-import com.google.mlkit.vision.face.Face
+package com.example.carmonitoringapp.model
 
 data class PersonDetectionEvent(
   val timestamp: String,
@@ -8,6 +6,3 @@ data class PersonDetectionEvent(
   val boundingBox: CustomBoundingBox,
   val detectedAction: String? = null
 )
-
-
-
