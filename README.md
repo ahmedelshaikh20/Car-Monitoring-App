@@ -161,3 +161,8 @@ val response = client.instance.chatCompletion(request)
              v
 [Delay 150ms and repeat next frame...]
 ```
+
+
+# Demo 
+<video src="demo.mp4" width="100%" controls></video>
+
