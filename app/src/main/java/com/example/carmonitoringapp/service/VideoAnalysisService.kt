@@ -3,8 +3,8 @@ package com.example.carmonitoringapp.service
 import android.graphics.Rect
 import android.util.Log
 import androidx.media3.exoplayer.ExoPlayer
-import com.example.carmonitoringapp.data.model.CustomBoundingBox
-import com.example.carmonitoringapp.data.model.PersonDetectionEvent
+import com.example.carmonitoringapp.model.CustomBoundingBox
+import com.example.carmonitoringapp.model.PersonDetectionEvent
 import com.example.carmonitoringapp.tlf.TFLitePersonDetector
 import com.example.carmonitoringapp.util.TimeStampUtils
 import com.example.carmonitoringapp.video.FaceAnalyzer
