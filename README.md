@@ -57,11 +57,11 @@ The `VideoAnalysisService` is the heart of the app's intelligent behavior detect
 The app uses OpenAI's `gpt-3.5-turbo` model to generate natural language summaries based on the behavior detected in the video analysis phase. This allows for a more user-friendly and insightful understanding of what occurred inside the vehicle during playback.
 
 
-###  Component: `OpenAiService`
+###  `OpenAiService`
 
 This class acts as a wrapper around the OpenAI Kotlin client library, sending detection prompts and retrieving AI-generated summaries.
 
-#### 🔧 How it works:
+####  How it works:
 
 1. Builds a `ChatCompletionRequest` using:
    - A **System message**: to define the assistant’s role (e.g., summarizing driver behavior).
@@ -163,6 +163,4 @@ val response = client.instance.chatCompletion(request)
 ```
 
 
-# Demo 
-<video src="demo.mp4" width="100%" controls></video>
 
