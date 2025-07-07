@@ -2,10 +2,12 @@ package com.example.carmonitoringapp.ui.screens
 
 import android.graphics.PointF
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,6 +61,7 @@ import com.example.carmonitoringapp.model.CustomBoundingBox
 import com.example.carmonitoringapp.ui.components.CustomButton
 import com.example.carmonitoringapp.ui.components.CustomSummaryBox
 
+@RequiresApi(Build.VERSION_CODES.O)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun InCarMonitoringScreen(
@@ -100,6 +103,12 @@ fun InCarMonitoringScreen(
         playerReady.value = state == Player.STATE_READY
       }
     })
+  }
+  LaunchedEffect(Unit) {
+    if (viewModel.state.value.selectedUri == null) {
+      val demoUri = Uri.parse("android.resource://${context.packageName}/raw/carpool")
+      viewModel.onEvent(HomeEvents.OnVideoSelected(demoUri))
+    }
   }
   Scaffold(
     topBar = { MainTopBar() }
