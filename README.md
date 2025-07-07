@@ -1,10 +1,49 @@
-# CarMonitoringApp
-When I first read the project description, I assumed it would be a relatively simple task — build an Android app that analyzes video, detects people with bounding boxes, and sends data to OpenAI to generate a summary.
-But once I started working on it, I realized the real challenge wasn’t just the implementation it was the open-ended nature of the project. Being given complete freedom to choose the libraries, architecture, and tools forced me to think more deeply about design decisions. That freedom was both exciting and intimidating.
+# InCar Monitoring App
+⚠️ **Attention: Add Your Own OpenAI API Key**
 
-Throughout the process, I learned a lot  from integrating ExoPlayer and video analysis, to setting up communication between the app and a Flask backend using Ktor. Working with OpenAI’s API.However, there are still challenges I haven’t fully overcome. Things like optimizing performance during real-time detection.
+To use the OpenAI integration in this project, you must add your own API key.
 
-Overall, the project has pushed me to grow as a developer — not just in terms of writing code, but in learning how to navigate ambiguity, make architectural choices, and deal with real-world complexity.
+**How to do it:**
+
+1. Open `gradle.properties` (create it if it doesn’t exist in the project root).
+2. Add your OpenAI API key:
+   ```properties
+   OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+# Overall Architecture
+
+The `CarMonitoringApp` is built with a modular, layered architecture that separates UI, video analysis, AI integration, and backend communication. This structure allows the app to handle real-time video processing and intelligent summarization effectively.
+
+
+- **UI Layer**  
+  A minimal interface with only essential components: video playback, a start button, and a summary display box. This simplicity allows the focus to remain on performance and intelligent behavior detection.
+
+- **Video Analysis Layer**  
+  Real-time frame extraction and two-layer detection logic are used here to identify people and infer behavior inside the cabin.
+
+- **AI Integration Layer**  
+  Uses OpenAI’s `gpt-3.5-turbo` model to turn detection data into natural language summaries. Prompts are dynamically constructed from real-time detection events.
+
+# Why Two-Layer Detection?
+
+To ensure accurate and context-aware detection of in-cabin behavior, the app uses **two independent detection systems** that complement each other:
+
+### 1. **TFLitePersonDetector**  
+A lightweight on-device TensorFlow Lite model that detects people in video frames by identifying bounding boxes. It's fast and suitable for real-time applications but doesn't provide detailed facial analysis.
+
+### 2. **FaceAnalyzer (ML Kit)**  
+Uses Google’s ML Kit Face Detection to analyze facial features — including:
+- **Head orientation**
+- **Smiling probability**
+
+This model adds **behavioral context** to the detected persons, allowing the app to infer whether someone is:
+- Looking left/right
+- Smiling
+- Neutral or unknown
+
+
 # Ui 
 The UI was by far the most straightforward part of the project just two buttons, a video placeholder, and a summary display box. It was quick and easy to build, and didn’t require much effort compared to the rest of the system.
 
@@ -81,8 +120,7 @@ This class acts as a wrapper around the OpenAI Kotlin client library, sending de
 The prompt is dynamically created from detection events using the `PromptFormatter`. It includes:
 - Timestamps
 - Detected actions (e.g., looking left, smiling, etc.)
-- Number of people in frame
-- Repeated or suspicious behavior
+- Bounding boxes for their locations
 
 This formatted text is used to ask OpenAI for a summary like:
 
@@ -96,7 +134,7 @@ This formatted text is used to ask OpenAI for a summary like:
 val messages = listOf(
     ChatMessage(
         role = ChatRole.System,
-        content = "You are a helpful AI assistant that summarizes in-cabin driver and co-driver behavior..."
+        content = "You are a helpful AI assistant that summarizes in-cabin driver and passengers behavior..."
     ),
     ChatMessage(role = ChatRole.User, content = prompt)
 )
@@ -104,7 +142,7 @@ val messages = listOf(
 val request = ChatCompletionRequest(
     model = ModelId("gpt-3.5-turbo"),
     messages = messages,
-    temperature = 0.7
+    temperature = 0.7  
 )
 
 val response = client.instance.chatCompletion(request)
