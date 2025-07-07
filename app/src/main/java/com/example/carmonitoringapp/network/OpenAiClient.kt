@@ -6,6 +6,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 
+
+// I know leaving the key like this is not correct but all for the sake to get into BMW
+// (i set limit for it too dw:)))))
+
 @Singleton
 class OpenAIClient @Inject constructor() {
   val instance: OpenAI by lazy {
