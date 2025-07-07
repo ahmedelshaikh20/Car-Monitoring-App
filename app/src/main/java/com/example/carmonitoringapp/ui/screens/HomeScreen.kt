@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -53,7 +55,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import com.example.carmonitoringapp.data.model.CustomBoundingBox
+import com.example.carmonitoringapp.model.CustomBoundingBox
 import com.example.carmonitoringapp.ui.components.CustomButton
 import com.example.carmonitoringapp.ui.components.CustomSummaryBox
 
@@ -64,6 +66,7 @@ fun InCarMonitoringScreen(
 ) {
   val state = viewModel.state.collectAsState()
   val context = LocalContext.current
+  val playerReady = remember { mutableStateOf(false) }
 
 
   val exoPlayer = remember(state.value.selectedUri) {
@@ -91,7 +94,13 @@ fun InCarMonitoringScreen(
   DisposableEffect(exoPlayer) {
     onDispose { exoPlayer?.release() }
   }
-
+  LaunchedEffect(exoPlayer) {
+    exoPlayer?.addListener(object : Player.Listener {
+      override fun onPlaybackStateChanged(state: Int) {
+        playerReady.value = state == Player.STATE_READY
+      }
+    })
+  }
   Scaffold(
     topBar = { MainTopBar() }
   ) { padding ->
@@ -113,11 +122,24 @@ fun InCarMonitoringScreen(
         detectedObjects = state.value.boundingBoxes
       )
       ActionButtonRow(
-        onStartClick = { viewModel.onEvent(HomeEvents.OnStartClick(exoPlayer)) },
+        onStartClick = {
+          if (exoPlayer != null && playerReady.value) {
+            viewModel.onEvent(HomeEvents.OnStartClick(exoPlayer))
+          }
+        },
         onStopClick = { viewModel.onEvent(HomeEvents.OnStopClick) },
-        startButtonEnabled = exoPlayer != null && state.value.isPlaying == false
+        startButtonEnabled = exoPlayer != null && state.value.isPlaying == false,
+        stopButtonEnabled = exoPlayer != null && state.value.isPlaying == true
       )
       CustomSummaryBox(text = state.value.currentSummary, modifier = Modifier.padding(10.dp))
+      if (state.value.statusMessage.isNotBlank()) {
+        Text(
+          text = state.value.statusMessage,
+          color = Color.Gray,
+          modifier = Modifier
+            .padding(bottom = 8.dp)
+        )
+      }
     }
   }
 }
@@ -255,7 +277,8 @@ fun ActionButtonRow(
   onStartClick: () -> Unit,
   onStopClick: () -> Unit,
   modifier: Modifier = Modifier,
-  startButtonEnabled: Boolean = true
+  startButtonEnabled: Boolean = false,
+  stopButtonEnabled: Boolean = false
 ) {
   Row(
     modifier
@@ -273,7 +296,7 @@ fun ActionButtonRow(
       text = "Stop",
       onClick = onStopClick,
       backgroundColor = Color(0xFFF44336),
-      enabled = !startButtonEnabled
+      enabled = stopButtonEnabled
     )
   }
 }
@@ -287,9 +310,3 @@ fun DrawScope.drawBounds(topLeft: PointF, size: Size, color: Color, stroke: Floa
   )
 }
 
-
-//@Preview
-//@Composable
-//fun PreviewMainScreen() {
-//  InCarMonitoringScreen(onStartClick = {}, onStopClick = {}, summaryText = "Summary Text")
-//}

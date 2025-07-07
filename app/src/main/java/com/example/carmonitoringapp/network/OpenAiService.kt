@@ -31,7 +31,7 @@ class OpenAiService @Inject constructor(
       response.choices.firstOrNull()?.message?.content?.trim()
         ?: "No response from AI."
     } catch (e: Exception) {
-      "Error contacting AI: ${e.localizedMessage}"
+      throw Exception("Error contacting AI: ${e.localizedMessage}")
     }
   }
 

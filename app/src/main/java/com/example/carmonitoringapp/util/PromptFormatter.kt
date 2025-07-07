@@ -1,6 +1,6 @@
 package com.example.carmonitoringapp.util
 
-import com.example.carmonitoringapp.data.model.PersonDetectionEvent
+import com.example.carmonitoringapp.model.PersonDetectionEvent
 
 object PromptFormatter {
   fun createRearViewCameraPrompt(events: List<PersonDetectionEvent>): String {

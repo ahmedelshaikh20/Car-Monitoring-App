@@ -1,10 +1,12 @@
 package com.example.carmonitoringapp.ui.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.carmonitoringapp.data.model.ReportRequest
+import com.example.carmonitoringapp.model.ReportRequest
+import com.example.carmonitoringapp.network.ApiService
 import com.example.carmonitoringapp.network.OpenAiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,7 @@ import javax.inject.Inject
 import com.example.carmonitoringapp.service.VideoAnalysisService
 import com.example.carmonitoringapp.util.PromptFormatter
 import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -25,7 +28,7 @@ import io.ktor.http.contentType
 class HomeViewModel @Inject constructor(
   private val videoAnalysisService: VideoAnalysisService,
   private val openAiService: OpenAiService,
-  private val client: HttpClient
+  private val apiService: ApiService,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(HomeState())
@@ -35,8 +38,9 @@ class HomeViewModel @Inject constructor(
   fun onEvent(event: HomeEvents) {
     when (event) {
       is HomeEvents.OnStartClick -> {
+
         _state.value = _state.value.copy(isPlaying = true)
-        videoAnalysisService.startDetection(event.player!!) { personDetectionEvent ->
+        videoAnalysisService.startDetection(event.player) { personDetectionEvent ->
           _state.value =
             _state.value.copy(
               boundingBoxes = personDetectionEvent.map { it.boundingBox },
@@ -47,45 +51,29 @@ class HomeViewModel @Inject constructor(
 
       is HomeEvents.OnStopClick -> {
         _state.value = _state.value.copy(isPlaying = false)
+
         if (_state.value.currentEvents.isNotEmpty()) {
           viewModelScope.launch {
-            val fullResponse = openAiService.getResponse(
-              PromptFormatter.createRearViewCameraPrompt(_state.value.currentEvents)
-            )
-
-            val timestamp = java.time.Instant.now().toString()
-
-            val summaryRegex =
-              Regex("""Summary:\s*(.*?)\s*(?=Analysis:)""", RegexOption.DOT_MATCHES_ALL)
-            val analysisRegex = Regex("""Analysis:\s*(.*)""", RegexOption.DOT_MATCHES_ALL)
-
-            val summary =
-              summaryRegex.find(fullResponse)?.groupValues?.get(1)?.trim() ?: "Summary not found"
-            val analysis =
-              analysisRegex.find(fullResponse)?.groupValues?.get(1)?.trim() ?: "Analysis not found"
-
-
-            val report = ReportRequest(
-              videoName = _state.value.selectedUri?.lastPathSegment.toString(),
-              timestamp = timestamp,
-              summary = summary,
-              analysis = analysis
-            )
-
             try {
-              val response = client.post("http://192.168.0.240:8000/submit-data") {
-                contentType(Application.Json)
-                setBody(report)
-              }
+              updateStatus("Generating report summary...")
 
-              val responseText = response.bodyAsText()
-              println("Report sent: $responseText")
+              val fullResponse = generateSummary()
+              val report = createReport(fullResponse)
+              _state.value = _state.value.copy(currentSummary = fullResponse)
+              updateStatus("Sending report to server...")
 
+              sendReportToServer(report)
+
+              _state.value = _state.value.copy(
+                currentSummary = fullResponse,
+                statusMessage = "Report submitted successfully!"
+              )
+
+            } catch (e: SocketTimeoutException) {
+              updateStatus("Timeout error :Failed to send the report to the server (timeout).")
             } catch (e: Exception) {
-              println("Error sending report: ${e.message}")
+              updateStatus("${e.message}")
             }
-
-            _state.value = _state.value.copy(currentSummary = fullResponse)
           }
         }
       }
@@ -97,7 +85,8 @@ class HomeViewModel @Inject constructor(
             isPlaying = false,
             currentEvents = emptyList(),
             boundingBoxes = emptyList(),
-            currentSummary = "There is no summary yet."
+            currentSummary = "There is no summary yet.",
+            statusMessage = ""
           )
       }
 
@@ -109,6 +98,42 @@ class HomeViewModel @Inject constructor(
   }
 
 
+  private fun updateStatus(message: String) {
+    _state.value = _state.value.copy(statusMessage = message)
+  }
+
+  @RequiresApi(Build.VERSION_CODES.O)
+  private suspend fun generateSummary(): String {
+    val prompt = PromptFormatter.createRearViewCameraPrompt(_state.value.currentEvents)
+    return openAiService.getResponse(prompt)
+  }
+
+  @RequiresApi(Build.VERSION_CODES.O)
+  private fun createReport(fullResponse: String): ReportRequest {
+    val timestamp = java.time.Instant.now().toString()
+
+    val summaryRegex = Regex("""Summary:\s*(.*?)\s*(?=Analysis:)""", RegexOption.DOT_MATCHES_ALL)
+    val analysisRegex = Regex("""Analysis:\s*(.*)""", RegexOption.DOT_MATCHES_ALL)
+
+    val summary =
+      summaryRegex.find(fullResponse)?.groupValues?.get(1)?.trim() ?: "Summary not found"
+    val analysis =
+      analysisRegex.find(fullResponse)?.groupValues?.get(1)?.trim() ?: "Analysis not found"
+
+    return ReportRequest(
+      videoName = _state.value.selectedUri?.lastPathSegment.toString(),
+      timestamp = timestamp,
+      summary = summary,
+      analysis = analysis
+    )
+  }
+
+  private suspend fun sendReportToServer(report: ReportRequest) {
+    val response = apiService.sendReport(report)
+    Log.d("Report sent", response.isSuccess.toString())
+  }
+
 }
+
 
 
