@@ -114,7 +114,8 @@ fun InCarMonitoringScreen(
       )
       ActionButtonRow(
         onStartClick = { viewModel.onEvent(HomeEvents.OnStartClick(exoPlayer)) },
-        onStopClick = { viewModel.onEvent(HomeEvents.OnStopClick) }
+        onStopClick = { viewModel.onEvent(HomeEvents.OnStopClick) },
+        startButtonEnabled = exoPlayer != null && state.value.isPlaying == false
       )
       CustomSummaryBox(text = state.value.currentSummary, modifier = Modifier.padding(10.dp))
     }
@@ -222,13 +223,11 @@ fun DetectionOverlay(
     val videoWidth = exoPlayer.videoFormat?.width?.toFloat() ?: canvasWidth
     val videoHeight = exoPlayer.videoFormat?.height?.toFloat() ?: canvasHeight
 
-    // Calculate scale to fit video into canvas (preserve aspect ratio)
     val scale = minOf(canvasWidth / videoWidth, canvasHeight / videoHeight)
 
     val scaledVideoWidth = videoWidth * scale
     val scaledVideoHeight = videoHeight * scale
 
-    // Center the video inside the canvas (account for black borders)
     val offsetX = (canvasWidth - scaledVideoWidth) / 2f
     val offsetY = (canvasHeight - scaledVideoHeight) / 2f
 
@@ -254,16 +253,28 @@ fun DetectionOverlay(
 @Composable
 fun ActionButtonRow(
   onStartClick: () -> Unit,
-  onStopClick: () -> Unit
+  onStopClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  startButtonEnabled: Boolean = true
 ) {
   Row(
-    Modifier
+    modifier
       .fillMaxWidth()
       .padding(16.dp),
     horizontalArrangement = Arrangement.SpaceEvenly
   ) {
-    CustomButton(text = "Start", onClick = onStartClick, backgroundColor = Color(0xFF4CAF50))
-    CustomButton(text = "Stop", onClick = onStopClick, backgroundColor = Color(0xFFF44336))
+    CustomButton(
+      text = "Start",
+      onClick = onStartClick,
+      backgroundColor = Color(0xFF4CAF50),
+      enabled = startButtonEnabled
+    )
+    CustomButton(
+      text = "Stop",
+      onClick = onStopClick,
+      backgroundColor = Color(0xFFF44336),
+      enabled = !startButtonEnabled
+    )
   }
 }
 

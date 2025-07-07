@@ -35,10 +35,13 @@ fun CustomButton(
   text: String,
   onClick: () -> Unit,
   backgroundColor: Color = MaterialTheme.colorScheme.primary,
-  modifier: Modifier = Modifier
-) {
+  modifier: Modifier = Modifier,
+  enabled: Boolean = true,
+
+  ) {
   Button(
     onClick = onClick,
+    enabled = enabled,
     colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
     shape = RoundedCornerShape(10.dp),
     modifier = modifier
@@ -54,7 +57,6 @@ fun CustomButton(
     )
   }
 }
-
 
 
 @Composable
@@ -74,9 +76,10 @@ fun CustomSummaryBox(
       containerColor = MaterialTheme.colorScheme.surface
     )
   ) {
-    Column(modifier = Modifier
-      .padding(16.dp)
-      .clickable { expanded = !expanded }
+    Column(
+      modifier = Modifier
+        .padding(16.dp)
+        .clickable { expanded = !expanded }
     ) {
       Row(
         verticalAlignment = Alignment.CenterVertically
