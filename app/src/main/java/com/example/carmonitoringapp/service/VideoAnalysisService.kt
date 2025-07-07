@@ -32,6 +32,7 @@ class VideoAnalysisService @Inject constructor(
     player: ExoPlayer,
     onResult: (List<PersonDetectionEvent>) -> Unit
   ) {
+    stopDetection()
     detectionJob = CoroutineScope(Dispatchers.Default).launch {
       val videoUri = withContext(Dispatchers.Main) {
         player.currentMediaItem?.localConfiguration?.uri
@@ -53,18 +54,17 @@ class VideoAnalysisService @Inject constructor(
         if (frame != null && !frame.isRecycled) {
           val timestamp = TimeStampUtils.formatTimestamp(currentPosition)
 
-          val (persons , faces) = awaitAll(
-          // TFLite person detection
-          async { tfDetector.detectPersons(frame, 0, timestamp) },
+          val (persons, faces) = awaitAll(
+            // TFLite person detection
+            async { tfDetector.detectPersons(frame, 0, timestamp) },
 
-          // ML Kit face analysis
-          async { faceAnalyzer.detectBestRotation(frame) }
+            // ML Kit face analysis
+            async { faceAnalyzer.detectBestRotation(frame) }
           )
           val events = (persons as List<PersonDetectionEvent>).map { person ->
             val matchingFace = (faces as List<Face>).find { face ->
               iou(face.boundingBox, person.boundingBox.toRect()) > 0.5
             }
-
 
             val action = matchingFace?.let {
               when {
@@ -74,7 +74,6 @@ class VideoAnalysisService @Inject constructor(
                 else -> "neutral"
               }
             } ?: "unknown"
-
             person.copy(detectedAction = action)
           }
 
