@@ -22,7 +22,10 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
-
+  defaultConfig {
+    buildConfigField("String", "OPENAI_API_KEY", "\"${project.properties["OPENAI_API_KEY"]}\"")
+  }
+  android.buildFeatures.buildConfig = true
   buildTypes {
     release {
       isMinifyEnabled = false
