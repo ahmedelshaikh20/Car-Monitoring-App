@@ -6,6 +6,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   id("kotlin-kapt")
   id("dagger.hilt.android.plugin")
+  id ("kotlinx-serialization")
 }
 
 android {
@@ -105,7 +106,7 @@ dependencies {
   implementation("io.ktor:ktor-client-logging")
   implementation("io.ktor:ktor-serialization-kotlinx-json")
 
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
 
   //Tensor flow
