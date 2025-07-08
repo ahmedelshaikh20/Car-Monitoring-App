@@ -1,3 +1,11 @@
+# Demo
+
+
+https://github.com/user-attachments/assets/e6ce7318-a8bf-4cf4-9aba-49484416b8af
+
+
+
+
 # InCar Monitoring App
 ⚠️ **Attention: Add Your Own OpenAI API Key**
 
@@ -67,7 +75,6 @@ Uses ML Kit's Face Detection API to detect faces in each extracted frame.
 ####  `Real-Time Video Analysis Service (The most challenging part)`
 
 The `VideoAnalysisService` is the heart of the app's intelligent behavior detection. It analyzes the video frame-by-frame during playback, identifies people and their actions, and triggers real-time events for further processing and summarization.This was the most challenging part because the idea of extracting info from frames and how to utilize scopes and decide which parts should run on the main thread or the background thread
-
 
 - **Video Initialization**  
    The service initializes using the currently loaded `ExoPlayer` video and starts analyzing frames as the video plays.
@@ -199,6 +206,8 @@ val response = client.instance.chatCompletion(request)
              v
 [Delay 150ms and repeat next frame...]
 ```
+
+
 
 
 
