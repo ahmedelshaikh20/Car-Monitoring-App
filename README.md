@@ -17,8 +17,7 @@ To use the OpenAI integration in this project, you must add your own API key.
 2. Add your OpenAI API key:
    ```properties
    OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-
+   ```
 
 # Overall Architecture
 
